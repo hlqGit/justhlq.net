@@ -1,0 +1,97 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>hlq</title>
+<style>
+  :root { --p: min(3vw, 5vh); }
+  html, body { height: 100%; margin: 0; background: #1d1d22; overflow: hidden; }
+  body { display: grid; place-items: center; perspective: 4000px; }
+  #scene { position: relative; transform-style: preserve-3d; transform: rotateX(-14deg); }
+  #bob, #spin, .c { transform-style: preserve-3d; }
+  #bob  { animation: bob 2.6s ease-in-out infinite alternate; }
+  #spin { animation: spin 7s linear infinite; }
+  .c { position: absolute; }
+  .c b { position: absolute; width: var(--p); height: var(--p); left: calc(var(--p) / -2); top: calc(var(--p) / -2);
+         background: var(--c); box-shadow: inset 0 0 0 max(1px, calc(var(--p) / 14)) rgba(0,0,0,.28); }
+  .f { transform: translateZ(calc(var(--p) / 2)); }
+  .k { transform: rotateY(180deg) translateZ(calc(var(--p) / 2)); filter: brightness(.6); }
+  .r { transform: rotateY(90deg)  translateZ(calc(var(--p) / 2)); filter: brightness(.7); }
+  .l { transform: rotateY(-90deg) translateZ(calc(var(--p) / 2)); filter: brightness(.7); }
+  .t { transform: rotateX(90deg)  translateZ(calc(var(--p) / 2)); filter: brightness(1.15); }
+  .u { transform: rotateX(-90deg) translateZ(calc(var(--p) / 2)); filter: brightness(.5); }
+  #shadow { position: absolute; left: calc(var(--p) * -7); top: calc(var(--p) * 2.4); width: calc(var(--p) * 14); height: calc(var(--p) * 8);
+            border-radius: 50%; background: radial-gradient(#000c, #0000 70%); transform: rotateX(90deg); animation: shade 2.6s ease-in-out infinite alternate; }
+  @keyframes bob   { from { transform: translateY(calc(var(--p) * -1.3)); } to { transform: translateY(calc(var(--p) * 1.3)); } }
+  @keyframes shade { from { scale: .85; opacity: .7; } to { scale: 1; opacity: 1; } }
+  @keyframes spin  { to { transform: rotateY(360deg); } }
+  @media (prefers-reduced-motion: reduce) { #bob, #spin, #shadow { animation: none; } }
+</style>
+<div id="scene"><div id="shadow"></div><div id="bob"><div id="spin"></div></div></div>
+<script>
+  const glyphs = {
+    h: [
+      "X..",
+      "X..",
+      "XXX",
+      "X.X",
+      "X.X",
+      "X.X",
+      "...",
+      "...",
+    ],
+    l: [
+      "XX.",
+      ".X.",
+      ".X.",
+      ".X.",
+      ".X.",
+      ".XX",
+      "...",
+      "...",
+    ],
+    q: [
+      "...",
+      "...",
+      "XXX",
+      "X.X",
+      "X.X",
+      "XXX",
+      "..X",
+      "..X",
+    ],
+  };
+
+  const blocks = new Set();
+  [..."hlq"].forEach((letter, i) => {
+    glyphs[letter].forEach((row, y) => {
+      [...row].forEach((cell, x) => {
+        if (cell === "X") blocks.add(`${i * 4 + x},${y}`);
+      });
+    });
+  });
+
+  const has = (x, y) => blocks.has(`${x},${y}`);
+  const spin = document.getElementById("spin");
+
+  for (const key of blocks) {
+    const [x, y] = key.split(",").map(Number);
+    const cube = document.createElement("div");
+    cube.className = "c";
+    cube.style.transform = `translate3d(calc(var(--p) * ${x - 5}), calc(var(--p) * ${y - 3.5}), 0)`;
+    cube.style.setProperty("--c", `hsl(${268 + y * 4} 65% ${64 - y * 2.5}%)`);
+
+    const faces = {
+      f: true,
+      k: true,
+      r: !has(x + 1, y),
+      l: !has(x - 1, y),
+      t: !has(x, y - 1),
+      u: !has(x, y + 1),
+    };
+    for (const face in faces) {
+      if (faces[face]) cube.insertAdjacentHTML("beforeend", `<b class="${face}"></b>`);
+    }
+
+    spin.append(cube);
+  }
+</script>
